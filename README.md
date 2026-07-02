@@ -49,20 +49,20 @@ When an application is launched, MaqOS triggers a dedicated resource-negotiation
 
 ```mermaid
 sequenceDiagram
-    participant Parent as "Desktop Shell (main.cpp)"
-    participant Child as "Spawned Child Process"
-    Note over Parent,Child: "fork() called; child executes setsid()"
-    Child->>Parent: "Write [RAM, HDD] via req_pipe[1]"
-    Note over Parent: "Read requests from req_pipe[0]"
-    Note over Parent: "Validate allocate_ram() & allocate_hdd()"
+    participant Parent as Desktop Shell
+    participant Child as Child Process
+    Note over Parent,Child: fork called - child executes setsid
+    Child->>Parent: Write RAM and HDD request via req_pipe
+    Note over Parent: Read requests from req_pipe
+    Note over Parent: Validate allocate_ram and allocate_hdd
     alt Resources Granted
-        Parent->>Child: "Write ACK = 1 via ack_pipe[1]"
-        Note over Child: "Read ACK = 1 from ack_pipe[0]"
-        Note over Child: "exec() target binary image"
+        Parent->>Child: Write ACK=1 via ack_pipe
+        Note over Child: Read ACK=1 from ack_pipe
+        Note over Child: exec target binary image
     else Resources Denied
-        Parent->>Child: "Write ACK = 0 via ack_pipe[1]"
-        Note over Child: "Read ACK = 0 from ack_pipe[0]"
-        Note over Child: "Safe _exit(0) prevents launch"
+        Parent->>Child: Write ACK=0 via ack_pipe
+        Note over Child: Read ACK=0 from ack_pipe
+        Note over Child: Safe _exit prevents launch
     end
 ```
 
