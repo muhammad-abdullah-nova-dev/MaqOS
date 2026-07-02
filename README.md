@@ -18,17 +18,17 @@ MaqOS is structured into a clean, four-layer modular architecture that separates
 
 ```mermaid
 graph TD
-    subgraph User Space (User Mode)
-        A["19 Simulated Desktop Applications (Games, Tools, Shell)"] -->|fork / exec| B[POSIX Child Processes]
+    subgraph UserSpace ["User Space (User Mode)"]
+        A["19 Simulated Desktop Applications (Games, Tools, Shell)"] -->|fork / exec| B["POSIX Child Processes"]
     end
-    subgraph Kernel Space (Kernel Mode)
-        C[Process Manager / PCB Table] <--> D[3-Level MLQ Scheduler]
-        C <--> E[Resource/Memory Allocator]
-        C <--> F[POSIX Sync Primitives Mutexes/Semaphores]
-        G[Deadlock Detection Thread] -->|DFS on RAG| C
+    subgraph KernelSpace ["Kernel Space (Kernel Mode)"]
+        C["Process Manager / PCB Table"] --- D["3-Level MLQ Scheduler"]
+        C --- E["Resource/Memory Allocator"]
+        C --- F["POSIX Sync Primitives (Mutexes/Semaphores)"]
+        G["Deadlock Detection Thread"] -->|DFS on RAG| C
     end
-    subgraph Hardware Abstraction Layer (HAL)
-        H[Simulated Hardware Layer]
+    subgraph HAL ["Hardware Abstraction Layer (HAL)"]
+        H["Simulated Hardware Layer"]
     end
     B -->|IPC Pipes Handshake| C
     C --> H
@@ -49,20 +49,20 @@ When an application is launched, MaqOS triggers a dedicated resource-negotiation
 
 ```mermaid
 sequenceDiagram
-    participant Parent as Desktop Shell (main.cpp)
-    participant Child as Spawned Child Process
-    Note over Parent, Child: fork() called; child executes setsid()
-    Child->>Parent: Write [RAM, HDD] via req_pipe[1]
-    Note over Parent: Read requests from req_pipe[0]
-    Note over Parent: Validate allocate_ram() & allocate_hdd()
+    participant Parent as "Desktop Shell (main.cpp)"
+    participant Child as "Spawned Child Process"
+    Note over Parent,Child: "fork() called; child executes setsid()"
+    Child->>Parent: "Write [RAM, HDD] via req_pipe[1]"
+    Note over Parent: "Read requests from req_pipe[0]"
+    Note over Parent: "Validate allocate_ram() & allocate_hdd()"
     alt Resources Granted
-        Parent->>Child: Write ACK = 1 via ack_pipe[1]
-        Note over Child: Read ACK = 1 from ack_pipe[0]
-        Note over Child: exec() target binary image
+        Parent->>Child: "Write ACK = 1 via ack_pipe[1]"
+        Note over Child: "Read ACK = 1 from ack_pipe[0]"
+        Note over Child: "exec() target binary image"
     else Resources Denied
-        Parent->>Child: Write ACK = 0 via ack_pipe[1]
-        Note over Child: Read ACK = 0 from ack_pipe[0]
-        Note over Child: Safe _exit(0) prevents launch
+        Parent->>Child: "Write ACK = 0 via ack_pipe[1]"
+        Note over Child: "Read ACK = 0 from ack_pipe[0]"
+        Note over Child: "Safe _exit(0) prevents launch"
     end
 ```
 
@@ -74,7 +74,7 @@ A detached scheduler thread (`maqos_scheduler` in [main.cpp](file:///c:/Users/NC
 
 ```mermaid
 graph TD
-    subgraph MLQ Scheduler Queues
+    subgraph MLQ ["MLQ Scheduler Queues"]
         Q0["Queue 0: System Processes <br/> (FCFS, Highest Priority 0-1)"]
         Q1["Queue 1: Interactive Processes <br/> (Priority Heap, Quantum RR 2s, Priority 2-3)"]
         Q2["Queue 2: Background Processes <br/> (FCFS, Lowest Priority 4-5)"]
@@ -84,9 +84,9 @@ graph TD
     Q1 -->|Process Next if Q0 Empty| CPU
     Q2 -->|Process Next if Q0 & Q1 Empty| CPU
     
-    subgraph Starvation Prevention & Preemption
-        Aging[Aging Daemon: Every 10 wait ticks, priority boosted] -->|Reposition in Q1| Q1
-        RR[Round Robin Daemon] -->|2s Quantum Expiry| CPU
+    subgraph Starvation ["Starvation Prevention & Preemption"]
+        Aging["Aging Daemon: Every 10 wait ticks, priority boosted"] -->|Reposition in Q1| Q1
+        RR["Round Robin Daemon"] -->|2s Quantum Expiry| CPU
     end
 ```
 
